@@ -1,0 +1,1247 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClipMind AI | YouTube Video Q&A</title>
+
+<style>
+:root {
+    --bg: #090d18;
+    --panel: #121a2b;
+    --panel2: #182239;
+    --border: #293650;
+    --text: #f4f7ff;
+    --muted: #94a3b8;
+    --purple: #8b5cf6;
+    --blue: #3b82f6;
+    --green: #4ade80;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: radial-gradient(ellipse at top, #201b43, var(--bg) 45%);
+    color: var(--text);
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+
+.app {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 225px minmax(0, 1fr);
+}
+
+.sidebar {
+    padding: 24px 16px;
+    background: #0c1220;
+    border-right: 1px solid var(--border);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 35px;
+}
+
+.brand-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    font-size: 22px;
+}
+
+.brand h2 { font-size: 17px; margin: 0; }
+.brand p { font-size: 11px; color: var(--muted); margin: 4px 0 0; }
+
+.side-heading {
+    color: #71809a;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    margin: 24px 8px 10px;
+}
+
+.nav-btn {
+    width: 100%;
+    display: block;
+    text-align: left;
+    background: transparent;
+    border: 1px solid transparent;
+    color: #c4cee0;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+}
+
+.nav-btn:hover, .nav-btn.active {
+    background: #1c2540;
+    border-color: #34405d;
+    color: white;
+}
+
+.sidebar-note {
+    margin-top: 45px;
+    padding: 15px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+main {
+    width: 100%;
+    max-width: 1550px;
+    padding: 28px;
+    margin: auto;
+    min-width: 0;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+.eyebrow {
+    color: #b9a1ff;
+    font-size: 11px;
+    letter-spacing: 2px;
+    font-weight: 700;
+}
+
+h1 {
+    font-size: clamp(25px, 3vw, 36px);
+    margin: 10px 0;
+    letter-spacing: -1px;
+}
+
+.gradient-text {
+    background: linear-gradient(100deg, #c4b5fd, #60a5fa);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.status-pill {
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 9px 12px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.load-card, .panel {
+    background: rgba(18, 26, 43, .95);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.load-card {
+    padding: 17px;
+    margin-bottom: 18px;
+}
+
+.section-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.load-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px auto;
+    gap: 10px;
+}
+
+input, select {
+    min-width: 0;
+    background: #0b1220;
+    color: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px;
+    outline: none;
+}
+
+input:focus, select:focus {
+    border-color: var(--purple);
+    box-shadow: 0 0 0 3px #8b5cf622;
+}
+
+.primary {
+    background: linear-gradient(120deg, #7c3aed, #3b82f6);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 12px 17px;
+    font-weight: 700;
+}
+
+.primary:hover { filter: brightness(1.12); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+
+.status {
+    font-size: 12px;
+    margin-top: 10px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.status.error { color: #fb7185; }
+.status.success { color: var(--green); }
+.status.info { color: var(--muted); }
+
+.workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.panel-header h3 { margin: 0; font-size: 14px; }
+.panel-header p { color: var(--muted); font-size: 10px; margin: 5px 0 0; }
+
+.badge {
+    background: #28204b;
+    border: 1px solid #55428b;
+    color: #c4b5fd;
+    border-radius: 20px;
+    padding: 5px 9px;
+    font-size: 10px;
+}
+
+.video-area { padding: 14px; }
+
+#player iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: 11px;
+    background: #080b13;
+}
+
+.video-placeholder {
+    aspect-ratio: 16 / 9;
+    border: 1px dashed #34405d;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 20px;
+    color: var(--muted);
+    background: radial-gradient(ellipse, #29204f, #111827);
+}
+
+.play-icon {
+    margin: 0 auto 13px;
+    width: 55px;
+    height: 55px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    border-radius: 17px;
+    font-size: 22px;
+    color: white;
+}
+
+.video-info {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 0 15px 15px;
+}
+
+.video-symbol {
+    background: var(--panel2);
+    border-radius: 10px;
+    padding: 13px;
+}
+
+.video-title {
+    font-size: 12px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.video-meta {
+    color: var(--muted);
+    font-size: 10px;
+    margin-top: 5px;
+}
+
+.tools {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0 14px 15px;
+}
+
+.tool-btn {
+    background: #101729;
+    border: 1px solid var(--border);
+    color: white;
+    border-radius: 11px;
+    padding: 12px 8px;
+    text-align: left;
+    font-size: 11px;
+}
+
+.tool-btn:hover { border-color: var(--purple); }
+.tool-btn strong { display: block; margin-top: 7px; }
+.tool-btn small { display: block; color: var(--muted); margin-top: 5px; }
+
+.transcript-panel { margin: 0 14px 15px; }
+
+.transcript-search {
+    width: 100%;
+    margin: 12px 0;
+    padding: 10px;
+}
+
+.transcript-list {
+    max-height: 310px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding-right: 3px;
+}
+
+.transcript-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    background: #101729;
+    color: #dce5f7;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    padding: 10px;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.transcript-item:hover, .transcript-item.active {
+    background: #20203e;
+    border-color: var(--purple);
+}
+
+.timestamp {
+    color: #b9a1ff;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.transcript-empty {
+    color: var(--muted);
+    font-size: 11px;
+    padding: 15px 5px;
+    line-height: 1.7;
+}
+
+.chat-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 580px;
+}
+
+.chat-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 17px;
+    flex: 1;
+    min-height: 350px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.welcome {
+    margin: auto 0;
+    text-align: center;
+    padding: 20px 5px;
+}
+
+.welcome-icon {
+    width: 51px;
+    height: 51px;
+    margin: 0 auto 14px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    border-radius: 17px;
+    font-size: 23px;
+}
+
+.welcome h2 { font-size: 18px; margin: 0 0 9px; }
+.welcome p {
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--muted);
+}
+
+.suggestions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.suggestion {
+    text-align: left;
+    background: #101729;
+    border: 1px solid var(--border);
+    color: #dce5f7;
+    border-radius: 10px;
+    padding: 11px;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.suggestion:hover { border-color: var(--purple); }
+
+.message-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+}
+
+.message-row.user { justify-content: flex-end; }
+
+.avatar {
+    flex-shrink: 0;
+    background: #29204b;
+    border-radius: 9px;
+    padding: 8px;
+    font-size: 11px;
+}
+
+.message {
+    max-width: 88%;
+    background: #1a2438;
+    border: 1px solid #28354e;
+    border-radius: 4px 12px 12px;
+    padding: 11px 13px;
+    font-size: 12px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.user .message {
+    background: #30265a;
+    border-radius: 12px 4px 12px 12px;
+}
+
+.timestamp-link {
+    color: #c4b5fd;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.chat-compose {
+    border-top: 1px solid var(--border);
+    padding: 13px;
+    background: #0f1726;
+}
+
+.compose {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #0b1220;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 5px 6px 5px 12px;
+}
+
+.compose input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 10px 0;
+}
+
+.send-btn {
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    color: white;
+    font-size: 19px;
+}
+
+.compose-note {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 9px 3px 0;
+    font-size: 9px;
+    color: #71809a;
+}
+
+.loading { color: #c4b5fd; font-size: 12px; }
+
+footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 10px;
+    color: #71809a;
+}
+
+@media (max-width: 1050px) {
+    .app { grid-template-columns: 185px minmax(0, 1fr); }
+    main { padding: 20px; }
+    .workspace { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 650px) {
+    .app { display: block; }
+    .sidebar { display: none; }
+    main { padding: 14px; }
+    header { align-items: flex-start; }
+    .status-pill { display: none; }
+    .load-row { grid-template-columns: 1fr 1fr; }
+    .load-row input { grid-column: 1 / -1; }
+    .load-row button { width: 100%; }
+    .tools { gap: 5px; }
+    .tool-btn { padding: 9px 6px; }
+    .suggestions { grid-template-columns: 1fr; }
+    .chat-panel { min-height: 480px; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<aside class="sidebar">
+    <div class="brand">
+        <div class="brand-icon">✦</div>
+        <div>
+            <h2>ClipMind AI</h2>
+            <p>Your video learning copilot</p>
+        </div>
+    </div>
+
+    <div class="side-heading">WORKSPACE</div>
+    <button class="nav-btn active" id="newChatBtn">＋ New conversation</button>
+    <button class="nav-btn" id="videoNav">▣ Video workspace</button>
+    <button class="nav-btn" id="chatNav">✧ Ask AI</button>
+
+    <div class="side-heading">QUICK TOOLS</div>
+    <button class="nav-btn quick-action" data-question="Summarize this video in bullet points.">📝 Video summary</button>
+    <button class="nav-btn quick-action" data-question="What are the key takeaways from this video?">💡 Key takeaways</button>
+    <button class="nav-btn quick-action" data-question="Create five MCQs from this video with answers.">🎯 Generate quiz</button>
+
+    <div class="sidebar-note">
+        ✨ <strong>Learn beyond watching</strong><br>
+        Ask questions, explore key ideas, and jump to relevant moments in your video.
+    </div>
+</aside>
+
+<main>
+<header>
+    <div>
+        <div class="eyebrow">AI VIDEO ASSISTANT</div>
+        <h1>Make every video <span class="gradient-text">make sense.</span></h1>
+        <p class="subtitle">Load a YouTube video and turn watching into answers, insights, and notes.</p>
+    </div>
+    <div class="status-pill">● Transcript-grounded answers</div>
+</header>
+
+<section class="load-card">
+    <div class="section-title">↗ Connect a YouTube video</div>
+    <div class="load-row">
+        <input id="url" placeholder="Paste a YouTube URL or video ID..." aria-label="YouTube URL">
+        <select id="language" aria-label="Transcript language">
+            <option value="en">English</option>
+            <option value="hi">Hindi</option>
+            <option value="ta">Tamil</option>
+            <option value="te">Telugu</option>
+            <option value="bn">Bengali</option>
+            <option value="mr">Marathi</option>
+            <option value="gu">Gujarati</option>
+            <option value="kn">Kannada</option>
+            <option value="ml">Malayalam</option>
+            <option value="pa">Punjabi</option>
+            <option value="ur">Urdu</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="ja">Japanese</option>
+        </select>
+        <button class="primary" id="loadBtn">Load video →</button>
+    </div>
+    <div id="status" class="status info" role="status" aria-live="polite">
+        Paste a video link to begin.
+    </div>
+</section>
+
+<div class="workspace">
+
+<section class="panel" id="videoPanel">
+    <div class="panel-header">
+        <div>
+            <h3>▣ Video & transcript</h3>
+            <p>Watch, search, and jump to any moment</p>
+        </div>
+        <span class="badge" id="videoBadge">NOT LOADED</span>
+    </div>
+
+    <div class="video-area">
+        <div id="videoPlaceholder" class="video-placeholder">
+            <div>
+                <div class="play-icon">▶</div>
+                <strong>Your next insight starts here</strong>
+                <p>Load a YouTube video to display the player and transcript.</p>
+            </div>
+        </div>
+        <div id="player"></div>
+    </div>
+
+    <div class="video-info">
+        <div class="video-symbol">▶</div>
+        <div>
+            <div class="video-title" id="videoTitle">No video selected</div>
+            <div class="video-meta" id="videoMeta">Choose a language and load a video</div>
+        </div>
+    </div>
+
+    <div class="tools">
+        <button class="tool-btn" data-question="Summarize this video in bullet points." disabled>
+            📝 <strong>Summary</strong><small>Main ideas</small>
+        </button>
+        <button class="tool-btn" data-question="What are the key takeaways from this video?" disabled>
+            💡 <strong>Key points</strong><small>Remember more</small>
+        </button>
+        <button class="tool-btn" data-question="Create five MCQs from this video with answers." disabled>
+            🎯 <strong>Quiz</strong><small>Test yourself</small>
+        </button>
+    </div>
+
+    <div class="transcript-panel">
+        <div class="section-title">📄 Video transcript</div>
+        <input id="transcriptSearch" class="transcript-search"
+               placeholder="Search words in transcript..." aria-label="Search transcript" disabled>
+        <div id="transcriptList" class="transcript-list">
+            <div class="transcript-empty">
+                The transcript will appear here after the video loads.
+                Click any timestamp to jump to that part of the video.
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="panel chat-panel" id="chatPanel">
+    <div class="panel-header">
+        <div>
+            <h3>✦ Chat with your video</h3>
+            <p>Ask questions in natural language</p>
+        </div>
+        <button class="nav-btn" id="clearBtn" style="width:auto;margin:0;padding:8px">↻ Reset</button>
+    </div>
+
+    <div class="chat-messages" id="chat">
+        <div class="welcome" id="welcome">
+            <div class="welcome-icon">✦</div>
+            <h2>What would you like to discover?</h2>
+            <p>Load a video first, then ask me to explain a concept or find important details.</p>
+
+            <div class="suggestions">
+                <button class="suggestion" data-question="Summarize this video in bullet points." disabled>📝 Give me a quick summary</button>
+                <button class="suggestion" data-question="What are the five most important points in this video?" disabled>💡 Find the key points</button>
+                <button class="suggestion" data-question="Explain the main topic in simple words." disabled>◉ Explain it simply</button>
+                <button class="suggestion" data-question="Create five MCQs from this video with answers." disabled>🎯 Make a practice quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <form class="chat-compose" id="askForm">
+        <div class="compose">
+            <input id="question" placeholder="Load a video to start asking..." autocomplete="off" disabled>
+            <button class="send-btn" id="sendBtn" type="submit" disabled aria-label="Send">↑</button>
+        </div>
+        <div class="compose-note">
+            <span>Enter to send</span>
+            <span>AI answers may need verification</span>
+        </div>
+    </form>
+</section>
+
+</div>
+<footer>Built with Flask · LangChain · FAISS · Groq</footer>
+</main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+let videoId = null;
+let currentLanguage = null;
+let transcriptSegments = [];
+let asking = false;
+let loading = false;
+
+/* ---------- General helpers ---------- */
+
+function setStatus(message, type = "info") {
+    $("status").textContent = message;
+    $("status").className = "status " + type;
+}
+
+async function postJSON(url, body) {
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+
+    let data;
+    try {
+        data = await response.json();
+    } catch {
+        throw new Error("Invalid server response. Check that Flask is running.");
+    }
+
+    if (!response.ok) {
+        throw new Error(data.error || "Request failed.");
+    }
+
+    return data;
+}
+
+function setChatEnabled(enabled) {
+    $("question").disabled = !enabled;
+    $("sendBtn").disabled = !enabled;
+
+    document.querySelectorAll("[data-question]").forEach(button => {
+        button.disabled = !enabled;
+    });
+
+    $("transcriptSearch").disabled = !enabled;
+}
+
+function formatTime(seconds) {
+    seconds = Math.max(0, Math.floor(Number(seconds) || 0));
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    return `${minutes}:${String(secs).padStart(2, "0")}`;
+}
+
+/* ---------- Video loading ---------- */
+
+async function loadVideo() {
+    if (loading) return;
+
+    const url = $("url").value.trim();
+    const language = $("language").value;
+
+    if (!url) {
+        setStatus("Please enter a YouTube URL or video ID.", "error");
+        $("url").focus();
+        return;
+    }
+
+    loading = true;
+    $("loadBtn").disabled = true;
+    $("language").disabled = true;
+    setChatEnabled(false);
+    $("transcriptList").innerHTML =
+        '<div class="transcript-empty">Loading transcript...</div>';
+
+    setStatus("Fetching transcript and building the searchable index...", "info");
+
+    try {
+        const data = await postJSON("/api/load", {
+            url: url,
+            language: language,
+            request_id: "ui-" + Date.now()
+        });
+
+        videoId = data.video_id;
+        currentLanguage = data.language || language;
+
+        // Create the embedded YouTube player.
+        $("player").replaceChildren();
+
+        const iframe = document.createElement("iframe");
+        iframe.src =
+            "https://www.youtube.com/embed/" +
+            encodeURIComponent(videoId) +
+            "?enablejsapi=1";
+
+        iframe.title = "YouTube video player";
+        iframe.allow =
+            "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        iframe.allowFullscreen = true;
+        iframe.referrerPolicy = "strict-origin-when-cross-origin";
+
+        $("player").appendChild(iframe);
+        $("videoPlaceholder").style.display = "none";
+
+        $("videoTitle").textContent = "YouTube video · " + videoId;
+        $("videoMeta").textContent =
+            "Transcript language: " + currentLanguage;
+
+        $("videoBadge").textContent = "READY";
+        $("videoBadge").style.color = "#4ade80";
+
+        clearChat();
+        setChatEnabled(true);
+
+        setStatus("Video loaded. Fetching transcript segments...", "success");
+
+        await loadTranscript();
+
+    } catch (error) {
+        videoId = null;
+        currentLanguage = null;
+        transcriptSegments = [];
+
+        setChatEnabled(false);
+        $("transcriptList").innerHTML =
+            '<div class="transcript-empty">Could not load the transcript.</div>';
+
+        setStatus(error.message, "error");
+    } finally {
+        loading = false;
+        $("loadBtn").disabled = false;
+        $("language").disabled = false;
+    }
+}
+
+/* ---------- Transcript panel ---------- */
+
+/*
+Expected GET /api/transcript response:
+{
+  "segments": [
+    {"text": "Welcome to the video", "start": 0.0, "duration": 3.2},
+    {"text": "Today we will learn...", "start": 3.2, "duration": 4.1}
+  ]
+}
+*/
+
+async function loadTranscript() {
+    const query = new URLSearchParams({
+        video_id: videoId,
+        language: currentLanguage
+    });
+
+    const response = await fetch("/api/transcript?" + query.toString());
+
+    let data;
+    try {
+        data = await response.json();
+    } catch {
+        throw new Error("Transcript endpoint returned an invalid response.");
+    }
+
+    if (!response.ok) {
+        throw new Error(data.error || "Could not retrieve transcript.");
+    }
+
+    transcriptSegments = Array.isArray(data.segments)
+        ? data.segments
+        : [];
+
+    renderTranscript(transcriptSegments);
+
+    if (!transcriptSegments.length) {
+        setStatus(
+            "Video loaded, but the transcript endpoint returned no segments. Check the Flask /api/transcript route.",
+            "error"
+        );
+    } else {
+        setStatus(
+            `Video ready. ${transcriptSegments.length} transcript segments loaded.`,
+            "success"
+        );
+    }
+}
+
+function renderTranscript(segments) {
+    const list = $("transcriptList");
+    list.replaceChildren();
+
+    if (!segments.length) {
+        const empty = document.createElement("div");
+        empty.className = "transcript-empty";
+        empty.textContent = "No transcript segments found.";
+        list.appendChild(empty);
+        return;
+    }
+
+    segments.forEach((segment, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "transcript-item";
+        button.dataset.index = index;
+
+        const time = document.createElement("span");
+        time.className = "timestamp";
+        time.textContent = formatTime(segment.start ?? segment.start_time ?? 0);
+
+        const text = document.createElement("span");
+        text.textContent = segment.text || "";
+
+        button.append(time, text);
+
+        button.addEventListener("click", () => {
+            seekTo(Number(segment.start ?? segment.start_time ?? 0));
+
+            document.querySelectorAll(".transcript-item").forEach(item => {
+                item.classList.remove("active");
+            });
+
+            button.classList.add("active");
+        });
+
+        list.appendChild(button);
+    });
+}
+
+$("transcriptSearch").addEventListener("input", () => {
+    const query = $("transcriptSearch").value.trim().toLowerCase();
+
+    const filtered = transcriptSegments.filter(segment =>
+        (segment.text || "").toLowerCase().includes(query)
+    );
+
+    renderTranscript(filtered);
+});
+
+/*
+Uses YouTube's iframe player API to seek within the embedded player.
+If the API has not loaded, open the video at the requested timestamp
+in a new tab as a fallback.
+*/
+
+let youtubePlayer = null;
+let youtubeApiReady = false;
+
+function loadYouTubeAPI() {
+    if (window.YT && window.YT.Player) {
+        youtubeApiReady = true;
+        createYouTubePlayer();
+        return;
+    }
+
+    if (document.getElementById("youtube-iframe-api")) return;
+
+    const script = document.createElement("script");
+    script.id = "youtube-iframe-api";
+    script.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(script);
+}
+
+window.onYouTubeIframeAPIReady = function() {
+    youtubeApiReady = true;
+    createYouTubePlayer();
+};
+
+function createYouTubePlayer() {
+    if (!youtubeApiReady || !videoId) return;
+
+    const iframe = $("player").querySelector("iframe");
+    if (!iframe) return;
+
+    try {
+        youtubePlayer = new YT.Player(iframe, {
+            events: {
+                onReady: () => {}
+            }
+        });
+    } catch (error) {
+        console.warn("YouTube player API could not initialize.", error);
+    }
+}
+
+function seekTo(seconds) {
+    if (!videoId) return;
+
+    if (youtubePlayer && typeof youtubePlayer.seekTo === "function") {
+        try {
+            youtubePlayer.seekTo(seconds, true);
+            if (typeof youtubePlayer.playVideo === "function") {
+                youtubePlayer.playVideo();
+            }
+            return;
+        } catch (error) {
+            console.warn("Embedded seek failed.", error);
+        }
+    }
+
+    window.open(
+        "https://www.youtube.com/watch?v=" +
+        encodeURIComponent(videoId) +
+        "&t=" + Math.floor(seconds) + "s",
+        "_blank",
+        "noopener,noreferrer"
+    );
+}
+
+loadYouTubeAPI();
+
+/* ---------- Chat ---------- */
+
+function clearChat() {
+    $("chat").replaceChildren();
+
+    const welcome = document.createElement("div");
+    welcome.className = "welcome";
+    welcome.id = "welcome";
+
+    const icon = document.createElement("div");
+    icon.className = "welcome-icon";
+    icon.textContent = "✦";
+
+    const heading = document.createElement("h2");
+    heading.textContent = "Video loaded. Let's explore it.";
+
+    const paragraph = document.createElement("p");
+    paragraph.textContent =
+        "Choose a suggested action or ask your own question.";
+
+    const suggestions = document.createElement("div");
+    suggestions.className = "suggestions";
+
+    const prompts = [
+        ["📝 Give me a quick summary", "Summarize this video in bullet points."],
+        ["💡 Find the key points", "What are the five most important points in this video?"],
+        ["◉ Explain it simply", "Explain the main topic in simple words."],
+        ["🎯 Make a practice quiz", "Create five MCQs from this video with answers."]
+    ];
+
+    prompts.forEach(([label, question]) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "suggestion";
+        button.textContent = label;
+        button.dataset.question = question;
+        button.addEventListener("click", () => askQuestion(question));
+        suggestions.appendChild(button);
+    });
+
+    welcome.append(icon, heading, paragraph, suggestions);
+    $("chat").appendChild(welcome);
+    setChatEnabled(true);
+}
+
+function addMessage(text, role) {
+    const welcome = $("welcome");
+    if (welcome) welcome.remove();
+
+    const row = document.createElement("div");
+    row.className = "message-row " + (role === "user" ? "user" : "bot");
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = role === "user" ? "You" : "✦";
+
+    const bubble = document.createElement("div");
+    bubble.className = "message";
+
+    if (role === "bot") {
+        renderAnswer(bubble, text);
+    } else {
+        bubble.textContent = text;
+    }
+
+    row.append(avatar, bubble);
+    $("chat").appendChild(row);
+    $("chat").scrollTop = $("chat").scrollHeight;
+
+    return row;
+}
+
+function renderAnswer(element, answer) {
+    /*
+    Only timestamp strings such as [02:35] are made clickable.
+    The rest of the model response is inserted as plain text.
+    */
+    const pattern = /\[(\d{1,3}):([0-5]\d)\]/g;
+    let lastIndex = 0;
+    let match;
+
+    element.replaceChildren();
+
+    while ((match = pattern.exec(answer)) !== null) {
+        element.appendChild(
+            document.createTextNode(answer.slice(lastIndex, match.index))
+        );
+
+        const seconds = Number(match[1]) * 60 + Number(match[2]);
+        const link = document.createElement("a");
+
+        link.href = "#";
+        link.className = "timestamp-link";
+        link.textContent = match[0];
+        link.title = "Jump to " + formatTime(seconds);
+
+        link.addEventListener("click", event => {
+            event.preventDefault();
+            seekTo(seconds);
+
+            // Highlight the closest transcript segment.
+            let closest = -1;
+            let distance = Infinity;
+
+            transcriptSegments.forEach((segment, index) => {
+                const start = Number(segment.start ?? segment.start_time ?? 0);
+                const diff = Math.abs(start - seconds);
+
+                if (diff < distance) {
+                    distance = diff;
+                    closest = index;
+                }
+            });
+
+            if (closest >= 0) {
+                const item = document.querySelector(
+                    `.transcript-item[data-index="${closest}"]`
+                );
+
+                if (item) {
+                    document.querySelectorAll(".transcript-item").forEach(el =>
+                        el.classList.remove("active")
+                    );
+                    item.classList.add("active");
+                    item.scrollIntoView({ block: "nearest", behavior: "smooth" });
+                }
+            }
+        });
+
+        element.appendChild(link);
+        lastIndex = pattern.lastIndex;
+    }
+
+    element.appendChild(
+        document.createTextNode(answer.slice(lastIndex))
+    );
+}
+
+async function askQuestion(overrideQuestion = null) {
+    const question = (overrideQuestion ?? $("question").value).trim();
+
+    if (!question || asking || loading) return;
+
+    if (!videoId) {
+        setStatus("Load a video before asking questions.", "error");
+        return;
+    }
+
+    asking = true;
+    $("question").value = "";
+    $("question").disabled = true;
+    $("sendBtn").disabled = true;
+
+    addMessage(question, "user");
+
+    const typing = addMessage("Thinking...", "bot");
+    typing.querySelector(".message").classList.add("loading");
+
+    try {
+        const data = await postJSON("/api/ask", {
+            video_id: videoId,
+            language: currentLanguage,
+            question: question
+        });
+
+        typing.remove();
+        addMessage(
+            data.answer || "I couldn't find an answer in the transcript.",
+            "bot"
+        );
+
+    } catch (error) {
+        typing.remove();
+        addMessage("Sorry, an error occurred: " + error.message, "bot");
+    } finally {
+        asking = false;
+        $("question").disabled = false;
+        $("sendBtn").disabled = false;
+        $("question").focus();
+    }
+}
+
+/* ---------- Events ---------- */
+
+$("loadBtn").addEventListener("click", loadVideo);
+
+$("url").addEventListener("keydown", event => {
+    if (event.key === "Enter") loadVideo();
+});
+
+$("askForm").addEventListener("submit", event => {
+    event.preventDefault();
+    askQuestion();
+});
+
+document.querySelectorAll("[data-question]").forEach(button => {
+    button.addEventListener("click", () => {
+        askQuestion(button.dataset.question);
+    });
+});
+
+$("clearBtn").addEventListener("click", () => {
+    if (videoId) clearChat();
+});
+
+$("newChatBtn").addEventListener("click", () => {
+    if (videoId) clearChat();
+    else $("url").focus();
+});
+
+$("videoNav").addEventListener("click", () => {
+    $("videoPanel").scrollIntoView({ behavior: "smooth" });
+});
+
+$("chatNav").addEventListener("click", () => {
+    $("chatPanel").scrollIntoView({ behavior: "smooth" });
+});
+</script>
+</body>
+</html>
