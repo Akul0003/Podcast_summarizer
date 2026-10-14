@@ -56,10 +56,9 @@ Ask questions about any supported YouTube video, explore its transcript, jump to
 ```text
 youtube-video-qa/
 │
-├── main.py             # Flask backend and API routes
+├── main2.py            # Flask backend and API routes
 ├── index2.html         # Frontend user interface
 ├── requirements.txt    # Python dependencies
-├── .env.example        # Example environment configuration
 ├── .gitignore          # Files excluded from Git
 └── README.md           # Project documentation
 ```
@@ -83,7 +82,7 @@ Before running the project, make sure you have:
 Replace `YOUR-USERNAME` with your GitHub username.
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/youtube-video-qa.git
+git clone https://github.com/Akul/youtube-video-qa.git
 cd youtube-video-qa
 ```
 
