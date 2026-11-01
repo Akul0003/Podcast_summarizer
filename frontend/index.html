@@ -838,6 +838,7 @@ button, .panel, .load-card, .tool-btn, .suggestion, .transcript-item {
 
 <script>
 const $ = id => document.getElementById(id);
+const API_BASE = "https://YOUR-RENDER-BACKEND.onrender.com";
 
 let videoId = null;
 let currentLanguage = null;
@@ -853,7 +854,7 @@ function setStatus(message, type = "info") {
 }
 
 async function postJSON(url, body) {
-    const response = await fetch(url, {
+    const response = await fetch(API_BASE + url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
@@ -946,7 +947,9 @@ async function pollProgress(requestId) {
 
     while (progressPolling) {
         try {
-            const response = await fetch("/api/progress?request_id=" + encodeURIComponent(requestId));
+            const response = await fetch(
+    API_BASE + "/api/progress?request_id=" + encodeURIComponent(requestId)
+);
             if (response.ok) {
                 const data = await response.json();
                 updateProgressUI(data);
@@ -1076,7 +1079,9 @@ async function loadTranscript() {
         language: currentLanguage
     });
 
-    const response = await fetch("/api/transcript?" + query.toString());
+    const response = await fetch(
+    API_BASE + "/api/transcript?" + query.toString()
+);
 
     let data;
     try {

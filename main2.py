@@ -4,6 +4,8 @@ from urllib.parse import urlparse, parse_qs
 from threading import Lock
 from collections import defaultdict
 import uuid
+from flask_cors import CORS
+import os
 
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, send_from_directory
@@ -28,6 +30,16 @@ from langchain_groq import ChatGroq
 load_dotenv()
 
 app = Flask(__name__)
+
+CORS(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": os.getenv("FRONTEND_ORIGIN", "*")
+        }
+    }
+)
+
 BASE_DIR = Path(__file__).resolve().parent
 
 _embeddings = None
