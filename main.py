@@ -1,14 +1,12 @@
-
-from pathlib import Path
 from urllib.parse import urlparse, parse_qs
-from threading import Lock
 from collections import defaultdict
 import uuid
+from threading import Lock
 from flask_cors import CORS
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api._errors import (
@@ -16,7 +14,9 @@ from youtube_transcript_api._errors import (
     NoTranscriptFound,
 )
 
-from langchain_huggingface import HuggingFaceEmbeddings
+from google import genai
+from google.genai import types
+from langchain_core.embeddings import Embeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
@@ -31,14 +31,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-CORS(
-    app,
-    resources={
-        r"/api/*": {
-            "origins": os.getenv("FRONTEND_ORIGIN", "*")
-        }
-    }
-)
+CORS(app)
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -268,15 +261,59 @@ def create_chunk(segments, video_id, language):
 # AI model helpers
 # --------------------------------------------------
 
+
+class GeminiEmbeddings(Embeddings):
+
+    def __init__(self):
+        api_key = os.getenv("GEMINI_API_KEY")
+
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY is missing.")
+
+        self.client = genai.Client(api_key=api_key)
+        self.model = "gemini-embedding-001"
+
+    def embed_documents(self, texts):
+        embeddings = []
+
+        # Embed each transcript chunk using Google's API.
+        for text in texts:
+            response = self.client.models.embed_content(
+                model=self.model,
+                contents=text,
+                config=types.EmbedContentConfig(
+                    task_type="RETRIEVAL_DOCUMENT",
+                    output_dimensionality=768,
+                ),
+            )
+
+            embeddings.append(
+                response.embeddings[0].values
+            )
+
+        return embeddings
+
+    def embed_query(self, text):
+        response = self.client.models.embed_content(
+            model=self.model,
+            contents=text,
+            config=types.EmbedContentConfig(
+                task_type="RETRIEVAL_QUERY",
+                output_dimensionality=768,
+            ),
+        )
+
+        return response.embeddings[0].values
+
+
 def get_embeddings():
     global _embeddings
 
     if _embeddings is None:
-        _embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
+        _embeddings = GeminiEmbeddings()
 
     return _embeddings
+
 
 
 def get_llm():
@@ -320,14 +357,14 @@ Answer:
 # Frontend route
 # --------------------------------------------------
 
-@app.route("/")
-def index():
-    """Serve index2.html as the main page."""
+# @app.route("/")
+# def index():
+#     """Serve index2.html as the main page."""
 
-    return send_from_directory(
-        str(BASE_DIR),
-        "index2.html",
-    )
+#     return send_from_directory(
+#         str(BASE_DIR),
+#         "index.html",
+#     )
 
 
 # --------------------------------------------------

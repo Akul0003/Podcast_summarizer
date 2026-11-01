@@ -1,12 +1,12 @@
 
 flask
 flask-cors
-gunicorn
 python-dotenv
 youtube-transcript-api
-langchain-huggingface
+
 langchain-community
 langchain-core
 langchain-groq
+
 faiss-cpu
-sentence-transformers
+google-genai
