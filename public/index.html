@@ -832,13 +832,13 @@ button, .panel, .load-card, .tool-btn, .suggestion, .transcript-item {
 </section>
 
 </div>
-<footer>Built with Flask · LangChain · FAISS · Groq</footer>
+<footer>Built with Python · LangChain · Groq · Vercel</footer>
 </main>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
-const API_BASE = "https://clipmind-ai-backend-lo6w.onrender.com";
+const API_BASE = ""; // Same-origin Vercel API routes
 
 let videoId = null;
 let currentLanguage = null;
@@ -854,7 +854,7 @@ function setStatus(message, type = "info") {
 }
 
 async function postJSON(url, body) {
-    const response = await fetch(API_BASE + url, {
+    const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
@@ -899,33 +899,31 @@ function formatTime(seconds) {
     return `${minutes}:${String(secs).padStart(2, "0")}`;
 }
 
-/* ---------- Live indexing progress ---------- */
+/* ---------- Frontend-only loading progress (no backend polling) ---------- */
 const progressStages = ["fetching", "processing", "embedding", "indexing"];
-let progressPolling = false;
 
 function updateProgressUI(data = {}) {
     const percent = Math.max(0, Math.min(100, Number(data.percent) || 0));
     $("progressPercent").textContent = percent + "%";
     $("progressFill").style.width = percent + "%";
 
-    // Keep the experience friendly: translate backend/AI terms into plain language.
     const friendlyMessages = {
-        starting: "Connecting to YouTube and getting everything ready...",
-        fetching: "Finding your video and reading what is being said...",
-        processing: "Putting the video's ideas in order so they're easy to explore...",
-        embedding: "Teaching your AI assistant what this video is about...",
-        indexing: "Almost there! Preparing your video so you can ask questions...",
-        ready: "Your video is ready! Ask anything and explore the important moments.",
+        starting: "Connecting to the video service...",
+        fetching: "Finding your video and reading its transcript...",
+        processing: "Preparing the transcript for your questions...",
+        embedding: "Preparing the AI context...",
+        indexing: "Almost there! Getting your video ready...",
+        ready: "Your video is ready! Ask anything and explore important moments.",
         error: data.detail || "We couldn't finish loading this video. Please try again."
     };
     $("progressDetail").textContent = friendlyMessages[data.stage] || "Getting your video ready...";
 
     const currentIndex = progressStages.indexOf(data.stage);
     document.querySelectorAll(".progress-step").forEach((step, index) => {
-        step.classList.toggle("done", data.stage === "ready" || (currentIndex >= 0 && index < currentIndex));
+        const done = data.stage === "ready" || (currentIndex >= 0 && index < currentIndex);
+        step.classList.toggle("done", done);
         step.classList.toggle("active", currentIndex === index && data.stage !== "ready");
-        step.querySelector(".step-dot").textContent =
-            step.classList.contains("done") ? "✓" : String(index + 1);
+        step.querySelector(".step-dot").textContent = done ? "✓" : String(index + 1);
     });
 
     if (data.stage === "ready") {
@@ -938,32 +936,6 @@ function updateProgressUI(data = {}) {
     if (data.stage === "error") {
         document.querySelectorAll(".progress-step").forEach(step => step.classList.remove("active"));
     }
-}
-
-async function pollProgress(requestId) {
-    progressPolling = true;
-    $("progressCard").classList.add("visible");
-    updateProgressUI({ stage: "starting", detail: "Connecting to YouTube...", percent: 2 });
-
-    while (progressPolling) {
-        try {
-            const response = await fetch(
-    API_BASE + "/api/progress?request_id=" + encodeURIComponent(requestId)
-);
-            if (response.ok) {
-                const data = await response.json();
-                updateProgressUI(data);
-                if (data.stage === "ready" || data.stage === "error") break;
-            }
-        } catch (error) {
-            console.warn("Progress update unavailable:", error);
-        }
-        await new Promise(resolve => setTimeout(resolve, 650));
-    }
-}
-
-function stopProgressPolling() {
-    progressPolling = false;
 }
 
 /* ---------- Video loading ---------- */
@@ -986,74 +958,63 @@ async function loadVideo() {
     $("loadBtnText").textContent = "Loading video...";
     $("language").disabled = true;
     setChatEnabled(false);
+    $("progressCard").classList.add("visible");
     $("transcriptList").innerHTML =
         '<div class="transcript-empty">Getting the video text ready for you...</div>';
-
     setStatus("We're getting your video ready. This may take a little moment...", "info");
+    updateProgressUI({ stage: "fetching", percent: 12 });
 
     try {
-        const requestId = "ui-" + Date.now();
-        const progressTask = pollProgress(requestId);
-        const data = await postJSON("/api/load", {
+        const data = await postJSON(API_BASE + "/api/load", {
             url: url,
-            language: language,
-            request_id: requestId
+            language: language
         });
-        stopProgressPolling();
-        await progressTask;
-        updateProgressUI({ stage: "ready", detail: data.cached ? "Your video is ready to explore!" : "Your video is ready to explore!", percent: 100 });
+
+        updateProgressUI({ stage: "processing", percent: 70 });
+
+        if (!Array.isArray(data.segments) || data.segments.length === 0) {
+            throw new Error("The server loaded the video but returned no transcript segments.");
+        }
 
         videoId = data.video_id;
         currentLanguage = data.language || language;
+        transcriptSegments = data.segments;
+        renderTranscript(transcriptSegments);
 
         // Create the embedded YouTube player.
         $("player").replaceChildren();
-
         const iframe = document.createElement("iframe");
-        iframe.src =
-            "https://www.youtube.com/embed/" +
-            encodeURIComponent(videoId) +
-            "?enablejsapi=1";
-
+        iframe.src = "https://www.youtube.com/embed/" +
+            encodeURIComponent(videoId) + "?enablejsapi=1";
         iframe.title = "YouTube video player";
-        iframe.allow =
-            "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
         iframe.allowFullscreen = true;
         iframe.referrerPolicy = "strict-origin-when-cross-origin";
-
         $("player").appendChild(iframe);
         $("videoPlaceholder").style.display = "none";
 
         $("videoTitle").textContent = "YouTube video · " + videoId;
-        $("videoMeta").textContent =
-            "Transcript language: " + currentLanguage;
-
+        $("videoMeta").textContent = "Transcript language: " + currentLanguage;
         $("videoBadge").textContent = "READY";
         $("videoBadge").style.color = "#4ade80";
 
         clearChat();
         setChatEnabled(true);
-
-        setStatus("Video loaded. Fetching transcript segments...", "success");
-
-        await loadTranscript();
+        updateProgressUI({ stage: "ready", percent: 100 });
+        setStatus(`Video ready. ${transcriptSegments.length} transcript segments loaded.`, "success");
 
     } catch (error) {
-        stopProgressPolling();
-        updateProgressUI({ stage: "error", detail: error.message, percent: 0 });
         videoId = null;
         currentLanguage = null;
         transcriptSegments = [];
-
         setChatEnabled(false);
         $("transcriptList").innerHTML =
             '<div class="transcript-empty">Could not load the transcript.</div>';
-
+        $("videoBadge").textContent = "NOT LOADED";
         updateProgressUI({ stage: "error", detail: error.message, percent: 0 });
         setStatus(error.message, "error");
     } finally {
         loading = false;
-        stopProgressPolling();
         $("loadBtn").disabled = false;
         $("loadBtn").classList.remove("is-loading");
         $("loadBtnText").textContent = "Load video →";
@@ -1062,56 +1023,6 @@ async function loadVideo() {
 }
 
 /* ---------- Transcript panel ---------- */
-
-/*
-Expected GET /api/transcript response:
-{
-  "segments": [
-    {"text": "Welcome to the video", "start": 0.0, "duration": 3.2},
-    {"text": "Today we will learn...", "start": 3.2, "duration": 4.1}
-  ]
-}
-*/
-
-async function loadTranscript() {
-    const query = new URLSearchParams({
-        video_id: videoId,
-        language: currentLanguage
-    });
-
-    const response = await fetch(
-    API_BASE + "/api/transcript?" + query.toString()
-);
-
-    let data;
-    try {
-        data = await response.json();
-    } catch {
-        throw new Error("Transcript endpoint returned an invalid response.");
-    }
-
-    if (!response.ok) {
-        throw new Error(data.error || "Could not retrieve transcript.");
-    }
-
-    transcriptSegments = Array.isArray(data.segments)
-        ? data.segments
-        : [];
-
-    renderTranscript(transcriptSegments);
-
-    if (!transcriptSegments.length) {
-        setStatus(
-            "Video loaded, but the transcript endpoint returned no segments. Check the Flask /api/transcript route.",
-            "error"
-        );
-    } else {
-        setStatus(
-            `Video ready. ${transcriptSegments.length} transcript segments loaded.`,
-            "success"
-        );
-    }
-}
 
 function renderTranscript(segments) {
     const list = $("transcriptList");
@@ -1395,10 +1306,11 @@ async function askQuestion(overrideQuestion = null) {
     typing.querySelector(".message").classList.add("loading");
 
     try {
-        const data = await postJSON("/api/ask", {
+        const data = await postJSON(API_BASE + "/api/ask", {
             video_id: videoId,
             language: currentLanguage,
-            question: question
+            question: question,
+            transcript: transcriptSegments
         });
 
         typing.remove();
